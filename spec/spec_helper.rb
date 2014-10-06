@@ -1,0 +1,7 @@
+require "rspec/rest"
+
+RSpec.configure do |c|
+  c.config_path = "spec/target/config"
+  c.template_path = "spec/target/template"
+end
+
