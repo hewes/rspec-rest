@@ -60,9 +60,57 @@ server1:
 
 File path : `RSpec.configuration.config_path`/authentications.yml
 
-- type: "basic"
-- user: username
-- password: password
+- mechanism: authentication mechanism
+  - required: Yes
+  - type: String
+  - description:
+    must be one of followings
+    - basic: HTTP Basic Authentication
+    - keystone\_v2: OpenStack keystone authentication with v2.0 API
+    - keystone\_v3: OpenStack keystone authentication with v3 API
+
+Other element depends on mechanism
+
+- basic
+  - user: username
+    - required: Yes
+    - type: String
+  - password: password
+    - required: Yes
+    - type: String
+
+- keystone\_v2
+  - server: Keystone server identifier
+    - required: Yes
+    - type: String
+    - NOTE: this value must be defined at `config/keystones.yml`
+  - user: username
+    - required: Yes
+    - type: String
+  - password: password
+    - required: Yes
+    - type: String
+  - tenant: tenant name
+    - required: Yes
+    - type: String
+
+- keystone\_v3
+  - server: Keystone server identifier
+    - required: Yes
+    - type: String
+    - NOTE: this value must be defined at `config/keystones.yml`
+  - user: username
+    - required: Yes
+    - type: String
+  - password: password
+    - required: Yes
+    - type: String
+  - project: project name 
+    - required: Yes
+    - type: String
+  - domain: domain name
+    - required: Yes
+    - type: String
 
 #### Template files Information
 
@@ -75,6 +123,29 @@ File path : `RSpec.configuration.config_path`/authentications.yml
 - `RSpec.configuration.use_synonym`
 
   - default: true
+
+#### Keystone Server Information
+
+File path : `RSpec.configuration.config_path`/keystones.yml
+
+- scheme: "http" or "https"
+  - required: no
+  - type: String
+  - default: "http"
+- address: server address (IP address or FQDN)
+  - required: yes
+  - type: Integer or String
+- port: tcp port
+  - required: no
+  - type: Integer or String
+  - default: 80
+- base\_path: base path for request
+  - required: no
+  - type: String
+- ssl\_verify:
+  - required: no
+  - type: Boolean
+  - default: false
 
 ## Contributing
 

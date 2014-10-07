@@ -7,6 +7,20 @@ module RSpec
   module Rest
     module Http
       module Helpers
+        module ClassMethods
+          def with_authentication(auth_name)
+            before(:each) do
+              default_request do |req|
+                req.auth = RSpec::Rest::Http::Authentication.build(auth_name)
+              end
+            end
+          end
+        end
+
+        def self.included(child)
+          child.extend(ClassMethods)
+        end
+
         def get(path, options = {}, &bk)
           do_request(:get, path, options, &bk)
         end
@@ -37,9 +51,16 @@ module RSpec
           yield request if block_given?
           uri = __build_uri__(path, options[:server] || request.server)
           http_request = HTTP.const_get(method.to_s.capitalize).new(uri.path, __build_http_headers__(request))
+
+          if request.auth
+            request.auth.inject_auth(http_request)
+          end
+
           if request.body
             http_request.body = request.body
           end
+
+          # TODO: https particular case
           response = Net::HTTP.new(uri.host, uri.port) do |http|
             http.request(http_request)
           end

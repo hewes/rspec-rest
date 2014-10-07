@@ -17,7 +17,7 @@ module RSpec
       end
 
       attr_writer :content_mime_type, :content_type
-      attr_accessor :content_charset, :body, :server
+      attr_accessor :content_charset, :body, :server, :auth
       attr_reader :option_headers
 
       def content_type
