@@ -2,6 +2,7 @@ require "net/https"
 require "yaml"
 require "rspec/rest/http/request"
 require "rspec/rest/http/response"
+require "rspec/rest/http/authentication"
 
 module RSpec
   module Rest
@@ -38,7 +39,12 @@ module RSpec
         end
 
         def default_request
-          yield __build_request__
+          @__default_request__ ||= RSpec::Rest::Http::Request.new
+          yield @__default_request__
+        end
+
+        def request
+          @__request__
         end
 
         def response
@@ -47,46 +53,49 @@ module RSpec
 
         private
         def do_request(method, path, options)
-          request = __build_request__
-          yield request if block_given?
-          uri = __build_uri__(path, options[:server] || request.server)
-          http_request = HTTP.const_get(method.to_s.capitalize).new(uri.path, __build_http_headers__(request))
+          @__request__ = RSpec::Rest::Http::Request.new(@__default_request__)
+          yield @__request__ if block_given?
 
-          if request.auth
-            request.auth.inject_auth(http_request)
+          config = __server_config__(options[:server] || @__request__.server)
+          uri_string = %Q(#{config["scheme"] || "http"}://#{config["address"]}:#{config["port"] || 80}/#{config["base_path"]}#{path})
+          begin
+            uri = URI.parse(uri_string)
+          rescue
+            raise RSpec::Rest::ConfigurationError.new("#{uri_string} is invalid")
+          end
+          http_request = Net::HTTP.const_get(method.to_s.capitalize).new(uri.path, __build_http_headers__(@__request__))
+
+          if @__request__.auth
+            @__request__.auth.inject_auth(http_request)
           end
 
-          if request.body
-            http_request.body = request.body
+          if @__request__.body
+            http_request.body = @__request__.body
           end
 
           # TODO: https particular case
-          response = Net::HTTP.new(uri.host, uri.port) do |http|
-            http.request(http_request)
+          response = nil
+          Net::HTTP.start(uri.host, uri.port) do |http|
+            response = http.request(http_request)
           end
-          @__response__ = RSpec::Rest::Http::Response.new(response)
+          @__response__ ||= RSpec::Rest::Http::Response.new(response)
         end
 
-        # @return [RSpec::Rest::Http::Request]
-        def __build_request__
-          @__request__ ||= RSpec::Rest::Http::Request.new
-        end
-
-        def __build_uri__(path, server = nil)
+        def __server_config__(server_name)
           configs = __load_server_configuraitons__
-          if server
-            config = configs[server]
-            raise RSpec::Rest::ConfigurationError.new("#{server} not found in configuration") unless config
+          if server_name
+            config = configs[server_name]
+            unless config
+              raise RSpec::Rest::ConfigurationError.new("#{server_name} not found in configuration")
+            end
           else
-            if configs.keys.size != 1
-              config = configs.values.first
-            else
-              config = configs.values.find{ |config| config[:default]}
-              raise RSpec::Rest::ConfigurationError.new("server not specified and default server not found") unless config
+            servers = configs.values
+            config = (servers.size == 1 && servers.first) || servers.find{|server| server["default"]}
+            unless config
+              raise RSpec::Rest::ConfigurationError.new("server not specified and default server not found")
             end
           end
-          uri_string = %Q(#{config[:scheme] || "http"}://#{config[:address]}:#{config[:port] || 80}/#{config[:base_path]}#{path})
-          URI.parse(uri_string)
+          return config
         end
 
         def __build_http_headers__(rest_request)
@@ -98,11 +107,28 @@ module RSpec
           if rest_request.accept
             headers["Accept"] = rest_request.accept
           end
-          headers.merge(request.headers)
+          headers.merge(rest_request.headers)
         end
 
         def __load_server_configuraitons__
-          $__server_configurations__  || YAML.load(RSpec.configuration.config_path + "/servers.yml")
+          return $__server_configurations__ if $__server_configurations__
+          file_path = RSpec.configuration.config_path + "/servers.yml"
+          $__server_configurations__  = RSpec::Rest::Util.load_yaml(file_path)
+          unless $__server_configurations__.is_a?(Hash)
+            raise RSpec::Rest::ConfigurationError.new("#{file_path} invalid format")
+          end
+
+          $__server_configurations__.each do |server_name, config|
+            if !config.is_a?(Hash)
+              raise RSpec::Rest::ConfigurationError.new("server configuration (#{server_name} in #{file_path}) is not a Hash")
+            end
+            ["address"].each do |key|
+              unless config.key?(key)
+                raise RSpec::Rest::ConfigurationError.new("#{key} not found in server configuration (#{server_name} in #{file_path}) ")
+              end
+            end
+          end
+          return $__server_configurations__
         end
       end
     end

@@ -2,34 +2,36 @@ require "rspec/rest/http/mime"
 
 module RSpec
   module Rest
-    class Request
+    module Http
+      class Request
 
-      def initialize
-        @content_mime_type = :text
-        @accept = :text
-        @content_charset = nil
-        @content_type = nil
-        @body = nil
-        @accept = nil
-        @option_headers = {}
-        @auth = nil
-        @server = nil
-      end
+        def initialize(default_request = nil)
+          @content_mime_type = default_request.content_mime_type rescue :text
+          @accept = default_request.accept rescue :text
+          @content_charset = default_request.content_charset rescue nil
+          @content_type = default_request.content_type rescue nil
+          @body = default_request.body rescue nil
+          @accept = default_request.accept rescue nil
+          @option_headers = default_request.headers rescue {}
+          @auth = default_request.auth rescue nil
+          @server = default_request.server rescue nil
+        end
 
-      attr_writer :content_mime_type, :content_type
-      attr_accessor :content_charset, :body, :server, :auth
-      attr_reader :option_headers
+        attr_writer :content_mime_type, :content_type
+        attr_accessor :content_charset, :body, :server, :auth
+        attr_reader :option_headers
 
-      def content_type
-        @content_type || Mime.foramt_content_type(@mime_type, @charset)
-      end
+        def content_type
+          @content_type || Mime.format_content_type(@content_mime_type, @content_charset)
+        end
 
-      def accept
-        Mime.format_mime_type(@accept)
-      end
+        def accept
+          Mime.format_mime_type(@accept)
+        end
 
-      def headers
-        @option_headers
+        def headers
+          @option_headers
+        end
       end
     end
   end

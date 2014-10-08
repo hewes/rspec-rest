@@ -23,7 +23,7 @@ module RSpec
           "euc_jp"    => "euc-jp",
         }
 
-        def foramt_content_type(mime_type, charset)
+        def format_content_type(mime_type, charset)
           mt = format_mime_type(mime_type)
           cs = RSpec.configuration.use_synonym ? (charset && "; #{CharMap[charset.to_s.downcase] || charset}") : charset
           %Q(#{mt}#{cs})
@@ -31,11 +31,12 @@ module RSpec
 
         def format_mime_type(mime_type)
           if RSpec.configuration.use_synonym
-            TypeMime[mime_type] || mime_type
+            TypeMap[mime_type] || mime_type
           else
             mime_type
           end
         end
+        module_function :format_content_type, :format_mime_type
       end
     end
   end

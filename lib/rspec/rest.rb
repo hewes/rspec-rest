@@ -1,5 +1,6 @@
 require "rspec/rest/version"
 require "rspec/rest/configuration"
+require "rspec/rest/util"
 require "rspec/rest/matchers"
 require "rspec/rest/helpers"
 require "rspec/rest/exceptions"

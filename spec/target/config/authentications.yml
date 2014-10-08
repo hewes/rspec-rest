@@ -1,0 +1,6 @@
+user1:
+  mechanism: keystone_v2
+  user: user1
+  pass: user1_pass
+  tenant: user1_tenant
+  server: keystone1

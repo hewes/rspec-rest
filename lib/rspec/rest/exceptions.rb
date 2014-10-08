@@ -7,6 +7,12 @@ module RSpec
       end
     end
 
+    class FileNotReadable < Exception
+      def initialize(file_path)
+        super("#{file_path} is not readable")
+      end
+    end
+
     class AuthenticationMechanismInvalid < Exception
       def initialize(auth_name, mechanism)
         super("specified mechanism '#{mechanism}' for #{auth_name} is not supported")

@@ -1,5 +1,6 @@
 require "spec_helper"
 require "ostruct"
+require "json"
 
 describe RSpec::Rest::Matchers::HaveHttpStatus do
   it "matches with http status code" do
@@ -14,4 +15,12 @@ describe RSpec::Rest::Matchers::HaveHttpStatus do
 end
 
 describe RSpec::Rest::Matchers::IncludeJson do
+  it "matches partial hash" do
+    expect({"element1" => {"sub1" => "val1", "sub2" => "val2"}}.to_json).to include_json({"element1" => {"sub2" => "val2"}}.to_json)
+  end
+
+  it "matches nested partial hash" do
+    expect({"element1" => {"sub1" => "val1", "sub2" => {"sub3" => "val2"}}}.to_json).to include_json({"element1" => {"sub2" => {"sub3" => "val2"}}}.to_json)
+  end
 end
+
