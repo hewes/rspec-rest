@@ -27,7 +27,7 @@ module RSpec
 
     class AuthenticationFailed < Exception
       def initialize(auth_name, message)
-        super("Authentication failed. definition of #{auth_name} may be invalid. server response: #{message}")
+        super("Authentication failed. definition of #{auth_name} may be invalid. message: #{message}")
       end
     end
 

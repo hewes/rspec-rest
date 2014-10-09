@@ -40,7 +40,10 @@ module RSpec
 
         def default_request
           @__default_request__ ||= RSpec::Rest::Http::Request.new
-          yield @__default_request__
+          if block_given?
+            yield @__default_request__
+          end
+          @__default_request__
         end
 
         def request
@@ -78,7 +81,7 @@ module RSpec
           Net::HTTP.start(uri.host, uri.port) do |http|
             response = http.request(http_request)
           end
-          @__response__ ||= RSpec::Rest::Http::Response.new(response)
+          @__response__ = RSpec::Rest::Http::Response.new(response)
         end
 
         def __server_config__(server_name)

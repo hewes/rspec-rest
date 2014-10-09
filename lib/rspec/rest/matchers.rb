@@ -8,7 +8,7 @@ module RSpec
     module Matchers
       # from rspec-rails
       def have_http_status(code)
-        RSpec::Rest::Matchers::HaveHttpStatus.matcher_for(code)
+        RSpec::Rest::Matchers::HaveHttpStatus.new(code)
       end
 
       def have_http_header(header)

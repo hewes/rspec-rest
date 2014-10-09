@@ -43,6 +43,7 @@ module RSpec
             @expire_time = nil
             @tenant_id = nil
           end
+          attr_reader :tenant_id
 
           def inject_auth(http_request)
             http_request["X-Auth-Token"] = token
@@ -74,8 +75,8 @@ module RSpec
             uri_string = base_uri + "/v2.0/tokens"
             uri = URI.parse(uri_string)
 
-            request = Net::HTTP::Post.new(uri.path, "Content-Type" => "application/json")
-            request.body = {
+            http_request = Net::HTTP::Post.new(uri.path, "Content-Type" => "application/json")
+            http_request.body = {
               :auth  =>  {
                 :tenantName => @auth_info["tenant"],
                 :passwordCredentials => {
@@ -90,13 +91,13 @@ module RSpec
               http.request(http_request)
             end
 
-            if response.code == 201
+            if [200, 201].include?(response.code.to_i)
               token_info = JSON.parse(response.body)["access"]["token"]
               @token = token_info["id"]
               @expire_time = Time.parse(token_info["expires"])
               @tenant_id = token_info["tenant"]["id"]
             else
-              raise RSpec::Rest::AuthenticationFailed.new(@auth_name, response.body)
+              raise RSpec::Rest::AuthenticationFailed.new(@auth_name, "response(code: #{response.code}, body: #{response.body})")
             end
           end
         end
@@ -106,7 +107,7 @@ module RSpec
             uri_string = base_uri + "/v3/tokens"
             uri = URI.parse(uri_string)
 
-            request = Net::HTTP::Post.new(uri.path, "Content-Type" => "application/json")
+            http_request = Net::HTTP::Post.new(uri.path, "Content-Type" => "application/json")
             auth = {
               :auth  =>  {
                 :identity => {
@@ -131,7 +132,7 @@ module RSpec
               }
             end
 
-            request.body = auth.to_json
+            http_request.body = auth.to_json
 
             # TODO: https particular case
             response = nil
@@ -139,13 +140,13 @@ module RSpec
               response = http.request(http_request)
             end
 
-            if response.code == 201
+            if [200, 201].include?(response.code.to_i)
               token_info = JSON.parse(response.body)["token"]
               @token = response.header["X-Subject-Token"]
               @expire_time = Time.parse(token_info["expires_at"])
               @tenant_id = token_info["project"]["id"]
             else
-              raise RSpec::Rest::AuthenticationFailed.new(@auth_name, response.body)
+              raise RSpec::Rest::AuthenticationFailed.new(@auth_name, "response(code: #{response.code}, body: #{response.body})")
             end
           end
         end
