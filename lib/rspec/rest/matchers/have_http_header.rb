@@ -1,4 +1,3 @@
-require "net/http"
 
 module RSpec
   module Rest
@@ -7,7 +6,6 @@ module RSpec
         def initialize(expected_header)
           @expected = expected_header
           @actual = nil
-          @invalid_response = nil
         end
 
         # @param [Object] response object providing an http code to match
@@ -20,5 +18,4 @@ module RSpec
     end
   end
 end
-
 

@@ -9,11 +9,9 @@ module RSpec
                        when Symbol then symbol2num(expected)
                        when String then expected.to_i
                        when Fixnum then expected
-                       else
-                         raise ArgumentError, "expected value must be Symbol or Fixnum"
+                       else raise ArgumentError, "expected value must be Symbol or Fixnum"
                        end
           @actual = nil
-          @invalid_response = nil
         end
 
         # @param [Object] response object providing an http code to match

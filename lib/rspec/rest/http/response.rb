@@ -1,10 +1,13 @@
 require "rspec/rest/http/mime"
+require "rspec/rest/http/content_type"
 require "forwardable"
 
 module RSpec
   module Rest
     module Http
       class Response
+        include RSpec::Rest::Http::ContentType
+
         extend Forwardable
 
         def initialize(http_response)
@@ -15,11 +18,11 @@ module RSpec
         def_delegators :@http_response, :code, :body, :message, :header
 
         def content_mime_type
-          content_type.split(";").first
+          split_content_type(content_type).first
         end
 
         def content_charset
-          content_type.split(";")[1]
+          split_content_type(content_type)[1]
         end
 
         def content_type
