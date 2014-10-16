@@ -1,6 +1,7 @@
 require "spec_helper"
 require "ostruct"
 require "json"
+require "securerandom"
 
 describe RSpec::Rest::Matchers::HaveHttpStatus do
   it "matches with http status code" do
@@ -39,6 +40,49 @@ describe RSpec::Rest::Matchers::IncludeJson do
     expect{
       expect({"element1" => {"sub1" => "val1"}}.to_json).to include_json([:hoge].to_json).in("element1/sub2")
     }.to raise_error(RSpec::Expectations::ExpectationNotMetError, '{"element1"=>{"sub1"=>"val1"}} does not have json path "element1/sub2"')
+  end
+end
+
+describe RSpec::Rest::Matchers::HaveUuidFormat do
+  it "matches uuid format" do
+    expect(SecureRandom.uuid).to have_uuid_format
+    expect(SecureRandom.uuid.gsub("-", "")).to have_uuid_format
+  end
+
+  it "raises if not uuid format" do
+    target = SecureRandom.uuid + "1"
+    expect{
+      expect(target).to have_uuid_format
+    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, "#{target} is not UUID format")
+
+    expect{
+      expect(target[0...(-2)]).to have_uuid_format
+    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, "#{target[0...(-2)]} is not UUID format")
+  end
+
+  it "matches uuid format in json path" do
+    expect({:test => SecureRandom.uuid}.to_json).to have_uuid_format.in("test")
+  end
+end
+
+describe RSpec::Rest::Matchers::HaveGuidFormat do
+  it "matches uuid format" do
+    expect(SecureRandom.uuid).to have_guid_format
+  end
+
+  it "matches uuid format in json path" do
+    expect({:test => SecureRandom.uuid}.to_json).to have_guid_format.in("test")
+  end
+
+  it "raises if not guid format" do
+    target = SecureRandom.uuid + "1"
+    expect{
+      expect(target).to have_guid_format
+    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, "#{target} is not GUID format")
+
+    expect{
+      expect(target[0...(-2)]).to have_guid_format
+    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, "#{target[0...(-2)]} is not GUID format")
   end
 end
 

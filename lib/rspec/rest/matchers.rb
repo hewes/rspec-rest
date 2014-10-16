@@ -2,6 +2,7 @@
 require "rspec/rest/matchers/have_http_status"
 require "rspec/rest/matchers/have_http_header"
 require "rspec/rest/matchers/include_json"
+require "rspec/rest/matchers/have_uuid_format"
 
 module RSpec
   module Rest
@@ -17,6 +18,14 @@ module RSpec
 
       def include_json(expected_json)
         RSpec::Rest::Matchers::IncludeJson.new(expected_json)
+      end
+
+      def have_uuid_format
+        RSpec::Rest::Matchers::HaveUuidFormat.new
+      end
+
+      def have_guid_format
+        RSpec::Rest::Matchers::HaveGuidFormat.new
       end
     end
   end
