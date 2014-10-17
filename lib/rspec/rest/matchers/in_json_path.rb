@@ -32,9 +32,9 @@ module RSpec
 
           def failure_message
             if @not_found_in_json_path
-              "#{@actual.inspect} does not have json path #{@validated_json_path.join('/').inspect}"
+              "#{@actual} does not have json path #{@validated_json_path.join('/').inspect}"
             else
-              @parent_matcher.failure_message + "(#{@json_path} in #{@actual})"
+              %Q(#{@parent_matcher.failure_message} (#{@json_path} in #{@actual}))
             end
           end
         end

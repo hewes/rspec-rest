@@ -23,19 +23,19 @@ module RSpec
         end
 
         def get(path, options = {}, &bk)
-          do_request(:get, path, options, &bk)
+          __do_request__(:get, path, options, &bk)
         end
 
         def post(path, options = {}, &bk)
-          do_request(:post, path, options, &bk)
+          __do_request__(:post, path, options, &bk)
         end
 
         def put(path, options = {}, &bk)
-          do_request(:put, path, options, &bk)
+          __do_request__(:put, path, options, &bk)
         end
 
         def delete(path, options = {}, &bk)
-          do_request(:delete, path, options, &bk)
+          __do_request__(:delete, path, options, &bk)
         end
 
         def default_request
@@ -55,7 +55,7 @@ module RSpec
         end
 
         private
-        def do_request(method, path, options)
+        def __do_request__(method, path, options)
           @__request__ = RSpec::Rest::Http::Request.new(@__default_request__)
           yield @__request__ if block_given?
 
@@ -76,11 +76,29 @@ module RSpec
             http_request.body = @__request__.body
           end
 
-          # TODO: https particular case
-          response = nil
-          Net::HTTP.start(uri.host, uri.port) do |http|
-            response = http.request(http_request)
+          log = "==============Request==================\n"
+          log << "Header:\n"
+          http_request.each_key do |key|
+            log << %Q(  #{key}: #{http_request[key]}\n)
           end
+          log << "Body: #{http_request.body}\n"
+          log << "======================================="
+          logger.info(log)
+
+          # TODO: https particular case
+          response = Net::HTTP.start(uri.host, uri.port) do |http|
+            http.request(http_request)
+          end
+
+          log = "==============Response==================\n"
+          log << "Header:\n"
+          response.each_key do |key|
+            log << %Q(  #{key}: #{response[key]}\n)
+          end
+          log << "Body: #{response.body}\n"
+          log << "======================================="
+          logger.info(log)
+
           @__response__ = RSpec::Rest::Http::Response.new(response)
         end
 

@@ -4,9 +4,58 @@ require "json"
 require "securerandom"
 
 describe RSpec::Rest::Matchers::HaveHttpStatus do
-  it "matches with http status code" do
+  it "raises ArgumentError for invalid symbol" do
+    expect{have_http_status(:dummy)}.to raise_error(ArgumentError, "invalid http status code: dummy")
+  end
+
+  it "raises  if actual value not respond to code" do
+    expect{
+      expect(100).to have_http_status(101)
+    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, "100(Fixnum) does not respond to 'code'")
+  end
+
+  it "raises if not matched" do
+    expect{
+      expect(fake_response(100)).to have_http_status(101)
+    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, "expect http status code 100 to be 101")
+  end
+
+  it "raises ArgumentError for other than symbol or int" do
+    expect{have_http_status({:dummy => "value"})}.to raise_error(ArgumentError, "expected value must be Symbol or Fixnum")
+  end
+
+  it "matches with http status code specified as integer" do
+    expect(fake_response(100)).to have_http_status(100)
+  end
+
+  it "matches with http status code specified as String" do
+    expect(fake_response(100)).to have_http_status("100")
+  end
+
+  it "matches with http status code specified as symbol" do
+    expect(fake_response(100)).to have_http_status(:continue)
+    expect(fake_response(101)).to have_http_status(:switching_protocols)
+    expect(fake_response(102)).to have_http_status(:processing)
     expect(fake_response(200)).to have_http_status(:ok)
     expect(fake_response(201)).to have_http_status(:created)
+    expect(fake_response(202)).to have_http_status(:accepted)
+    expect(fake_response(203)).to have_http_status(:non_authoritative_information)
+    expect(fake_response(204)).to have_http_status(:no_content)
+    expect(fake_response(205)).to have_http_status(:reset_content)
+    expect(fake_response(206)).to have_http_status(:partial_content)
+    expect(fake_response(207)).to have_http_status(:multi_status)
+    expect(fake_response(226)).to have_http_status(:im_used)
+    expect(fake_response(300)).to have_http_status(:multiple_choices)
+    expect(fake_response(301)).to have_http_status(:moved_permanently)
+    expect(fake_response(302)).to have_http_status(:found)
+    expect(fake_response(303)).to have_http_status(:see_other)
+    expect(fake_response(304)).to have_http_status(:not_modified)
+    expect(fake_response(305)).to have_http_status(:use_proxy)
+    expect(fake_response(307)).to have_http_status(:temporary_redirect)
+    expect(fake_response(400)).to have_http_status(:bad_request)
+    expect(fake_response(401)).to have_http_status(:unauthorized)
+    expect(fake_response(402)).to have_http_status(:payment_required)
+    expect(fake_response(403)).to have_http_status(:forbidden)
     expect(fake_response(404)).to have_http_status(:not_found)
   end
 
@@ -39,7 +88,7 @@ describe RSpec::Rest::Matchers::IncludeJson do
   it "raises if it does not have the json path" do
     expect{
       expect({"element1" => {"sub1" => "val1"}}.to_json).to include_json([:hoge].to_json).in("element1/sub2")
-    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, '{"element1"=>{"sub1"=>"val1"}} does not have json path "element1/sub2"')
+    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, '{"element1":{"sub1":"val1"}} does not have json path "element1/sub2"')
   end
 end
 

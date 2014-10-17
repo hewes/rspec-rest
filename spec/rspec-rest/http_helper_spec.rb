@@ -17,11 +17,13 @@ describe RSpec::Rest::Http::Helpers do
 
   describe "with_authentication" do
     before(:each) do
-      response = OpenStruct.new(:code => 201, :body => {:access => {:token => {:id => "token1", :expires => "2014-06-10T21:40:14Z", :tenant => {:id => "tenant1"}}}}.to_json)
-
-      obj = Object.new
-      flexmock(obj).should_receive(:start).and_return(response)
-      flexmock(Net::HTTP).should_receive(:new).and_return(obj)
+      response =  OpenStruct.new
+      flexmock(response) do |res|
+        res.should_receive(:code).and_return(201)
+        res.should_receive(:body).and_return({:access => {:token => {:id => "token1", :expires => "2014-06-10T21:40:14Z", :tenant => {:id => "tenant1"}}}}.to_json)
+        res.should_receive(:each_key).and_return({:dummy_header => "header1"})
+      end
+      flexmock(Net::HTTP).should_receive(:start).and_return(response)
     end
     with_authentication "user1"
 

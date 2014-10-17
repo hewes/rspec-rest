@@ -14,6 +14,10 @@ module RSpec
           @actual = nil
         end
 
+        def failure_message
+          @message || "expect http status code #{@actual} to be #{@expected}"
+        end
+
         # @param [Object] response object providing an http code to match
         # @return [Boolean] `true` if the numeric code matched the `response` code
         def matches?(response)
@@ -21,6 +25,7 @@ module RSpec
             @actual = response.code
             @expected == @actual.to_i
           else
+            @message = "#{response}(#{response.class}) does not respond to 'code'"
             false
           end
         end
@@ -78,7 +83,7 @@ module RSpec
           when :http_version_not_supported      then 505
           when :insufficient_storage            then 507
           when :not_extended                    then 510
-          else raise ArgumentError, "invalid http status code"
+          else raise ArgumentError, "invalid http status code: #{symbol}"
           end
         end
       end

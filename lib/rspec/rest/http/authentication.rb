@@ -135,9 +135,8 @@ module RSpec
             http_request.body = auth.to_json
 
             # TODO: https particular case
-            response = nil
-            Net::HTTP.start(uri.host, uri.port) do |http|
-              response = http.request(http_request)
+            response = Net::HTTP.start(uri.host, uri.port) do |http|
+              http.request(http_request)
             end
 
             if [200, 201].include?(response.code.to_i)
