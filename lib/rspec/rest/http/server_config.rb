@@ -8,8 +8,8 @@ module RSpec
         include RSpec::Rest::Logger
 
         class << self
-          def build(server_name = nil)
-            configs = __load_server_configuraitons__
+          def build(server_name = nil, file_name = "servers.yml")
+            configs = load_server_configuraitons(file_name)
             if server_name
               config = configs[server_name]
               unless config
@@ -26,15 +26,18 @@ module RSpec
           end
 
           private
-          def __load_server_configuraitons__
-            return $__server_configurations__ if $__server_configurations__
-            file_path = RSpec.configuration.config_path + "/servers.yml"
-            $__server_configurations__  = RSpec::Rest::Util.load_yaml(file_path)
-            unless $__server_configurations__.is_a?(Hash)
+          def load_server_configuraitons(file_name)
+            cached = cached_config(file_name)
+            return cached if cached
+
+            file_path = File.join(RSpec.configuration.config_path, "/#{file_name}")
+            loaded_config  = RSpec::Rest::Util.load_yaml(file_path)
+
+            unless loaded_config.is_a?(Hash)
               raise RSpec::Rest::ConfigurationError.new("#{file_path} invalid format")
             end
 
-            $__server_configurations__.each do |server_name, config|
+            loaded_config.each do |server_name, config|
               if !config.is_a?(Hash)
                 raise RSpec::Rest::ConfigurationError.new("server configuration (#{server_name} in #{file_path}) is not a Hash")
               end
@@ -44,7 +47,17 @@ module RSpec
                 end
               end
             end
-            return $__server_configurations__
+            add_config(file_name, loaded_config)
+            return loaded_config
+          end
+
+          def cached_config(file_name)
+            @loaded_configs ||= {}
+            @loaded_configs[file_name]
+          end
+
+          def add_config(file_name, config)
+            @loaded_configs[file_name] = config
           end
         end
 

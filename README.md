@@ -1,6 +1,43 @@
 # Rspec::Rest
 
-TODO: Write a gem description
+`rspec-rest` is a library for testing WEB Server through Restful API with `rspec`.
+
+*Feature*:
+
+- define `rspec` matchers
+  - `have_http_status` (like rails)
+  - `have_http_header`
+  - `include_json`
+  - `have_uuid_format`
+  - `have_guid_format`
+
+- define helper methods for send http request to WEB server
+  - send/receive http request/response
+  - send http request with authentication (basic or Keystone(OpenStack)).
+
+- management erb template files
+
+*Simple Example*
+
+```ruby
+before do
+  default_request do |req|
+    req.server = "server1"
+  end
+end
+
+it "responds 404 if URI is invalid" do
+  get "/dir1/item1"
+  expect(response).to have_http_status(:not_found)
+end
+
+it "responds 200 if authenticated as admin" do
+  get "/dir1/item2" do |req|
+    req.auth :admin
+  end
+  expect(response).to have_http_status(:ok)
+end
+```
 
 ## Installation
 
@@ -20,9 +57,22 @@ Or install it yourself as:
 
 ### Configuration
 
-- `RSpec.configuration.config_path`
+#### RSpec Configuraiton
 
-  - default: 'config/'
+```ruby
+require "rspec/rest"
+
+RSpec.configure do |c|
+  c.config_path = "spec/target/config"
+  c.template_path = "spec/target/template"
+  c.use_synonym = true
+end
+```
+
+|Config         |Required|Default   |Description                                              |
+|---------------|--------|----------|---------------------------------------------------------|
+|config\_path   |No      |config/   |path to directory where configuraiton files are stored   |
+|template\_path |No      |template/ |path to directory where template files are stored        |
 
 #### Target Server Information
 
@@ -30,123 +80,96 @@ File path : `RSpec.configuration.config_path`/servers.yml
 
 Each server configuration has following items:
 
-- scheme: "http" or "https"
-  - required: no
-  - default: "http"
-- host: server address (IP address or FQDN)
-  - required: yes
-- port: tcp port
-  - required: no
-  - default: 80
-- base\_path: base path for request
-  - required: no
-- default: this server is default server
-  - required: no
-  - default: false
-- ssl\_verify:
-  - required: no
-  - default: false
+|Key        |Required|Default|Description                                              |
+|-----------|--------|-------|---------------------------------------------------------|
+|scheme     |No      |`http` |`http` or `https`                                        |
+|host       |Yes     |-      |server address (IP address or FQDN)                      |
+|port       |No      |`80`   |tcp port                                                 |
+|base\_path |No      |-      |base path for all request                                |
+|default    |No      |false  |use this server when server is not specified for request |
+|ssl\_verify|No      |false  |when scheme is `https`, verify ssl or not                |
 
-Example
+*Example*
 
-~~~
+```yaml
 server1:
-  :scheme : http
-  :host : localhost
-  :port : 80
-~~~
+  scheme : http
+  host : localhost
+  port : 80
+  default: true
+  base_path: dir1/
+server2:
+  scheme : https
+  host : localhost
+  port : 443
+  base_path: dir2/
+  ssl_verify: true
+```
 
 #### Authentication Information
 
 File path : `RSpec.configuration.config_path`/authentications.yml
 
-- mechanism: authentication mechanism
-  - required: Yes
-  - type: String
-  - description:
-    must be one of followings
-    - basic: HTTP Basic Authentication
-    - keystone\_v2: OpenStack keystone authentication with v2.0 API
-    - keystone\_v3: OpenStack keystone authentication with v3 API
+|Key        |Required|Default|Description              |
+|-----------|--------|-------|-------------------------|
+|mechanism  |Yes     |-      |authentication mechanism |
 
-Other element depends on mechanism
+`mechanism` must be one of followings
 
-- basic
-  - user: username
-    - required: Yes
-    - type: String
-  - password: password
-    - required: Yes
-    - type: String
+- basic: HTTP Basic Authentication
+- keystone\_v2: OpenStack keystone authentication with v2.0 API
+- keystone\_v3: OpenStack keystone authentication with v3 API
 
-- keystone\_v2
-  - server: Keystone server identifier
-    - required: Yes
-    - type: String
-    - NOTE: this value must be defined at `config/keystones.yml`
-  - user: username
-    - required: Yes
-    - type: String
-  - password: password
-    - required: Yes
-    - type: String
-  - tenant: tenant name
-    - required: Yes
-    - type: String
+Other items depend on mechanism.
 
-- keystone\_v3
-  - server: Keystone server identifier
-    - required: Yes
-    - type: String
-    - NOTE: this value must be defined at `config/keystones.yml`
-  - user: username
-    - required: Yes
-    - type: String
-  - password: password
-    - required: Yes
-    - type: String
-  - project: project name 
-    - required: Yes
-    - type: String
-  - domain: domain name
-    - required: Yes
-    - type: String
+When mechanism is `basic`
 
-#### Template files Information
+|Key        |Required|Default|Description                                              |
+|-----------|--------|-------|---------------------------------------------------------|
+|user       |Yes     |-      |username                                                 |
+|password   |Yes     |-      |password                                                 |
 
-- `RSpec.configuration.template_path`
+When mechanism is `keystone_v2`
 
-  - default: 'template/'
+|Key        |Required|Default|Description                                                           |
+|-----------|--------|-------|----------------------------------------------------------------------|
+|server     |Yes     |-      |Keystone server identifier (must be defined at `config/keystones.yml`)|
+|user       |Yes     |-      |username                                                              |
+|password   |Yes     |-      |password                                                              |
+|tenant     |Yes     |-      |tenant name                                                           |
 
-#### RSpec behaviors
+When mechanism is `keystone_v3`
 
-- `RSpec.configuration.use_synonym`
+|Key        |Required|Default|Description                                                           |
+|-----------|--------|-------|----------------------------------------------------------------------|
+|server     |Yes     |-      |Keystone server identifier (must be defined at `config/keystones.yml`)|
+|user       |Yes     |-      |username                                                              |
+|password   |Yes     |-      |password                                                              |
+|project    |Yes     |-      |project name                                                          |
+|domain     |Yes     |-      |domain name                                                           |
 
-  - default: true
+*Example*
 
+```yaml
+admin:
+   mechanism: basic
+   user: admin_user
+   password: admin_password
+```
 #### Keystone Server Information
 
 File path : `RSpec.configuration.config_path`/keystones.yml
 
-- scheme: "http" or "https"
-  - required: no
-  - type: String
-  - default: "http"
-- host: server address (IP address or FQDN)
-  - required: yes
-  - type: Integer or String
-- port: tcp port
-  - required: no
-  - type: Integer or String
-  - default: 80
-- base\_path: base path for request
-  - required: no
-  - type: String
-- ssl\_verify:
-  - required: no
-  - type: Boolean
-  - default: false
+format is same as `Target Server Information`
 
+~~~
+keystone1:
+  scheme : http
+  host : localhost
+  port : 5000
+~~~
+
+example
 ## Contributing
 
 1. Fork it ( https://github.com/[my-github-username]/rspec-rest/fork )

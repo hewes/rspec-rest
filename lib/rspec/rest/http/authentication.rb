@@ -37,10 +37,9 @@ module RSpec
 
         class Keystone
           def initialize(auth_name, auth_info)
-            $__keystones__ ||= RSpec::Rest::Util.load_yaml(RSpec.configuration.config_path + "/keystones.yml")
             @auth_info = auth_info
             @auth_name = auth_name
-            @server_config = RSpec::Rest::Http::ServerConfig.new($__keystones__[@auth_info["server"]])
+            @server_config = RSpec::Rest::Http::ServerConfig.build(@auth_info["server"], "keystones.yml")
             @expire_time = nil
             @tenant_id = nil
           end
