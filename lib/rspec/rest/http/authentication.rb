@@ -27,11 +27,17 @@ module RSpec
         class Basic
           def initialize(auth_name, auth_info)
             @auth_name = auth_name
-            @auth_info = auth_info
+            ["user", "password"].each do |key|
+              unless auth_info.key?(key)
+                raise RSpec::Rest::ConfigurationError.new("#{key} not found in auth configuration for #{auth_name}")
+              end
+            end
+            @user = auth_info["user"]
+            @pass = auth_info["password"]
           end
 
           def inject_auth(http_request)
-            # TODO: implement
+            http_request.basic_auth @user, @pass
           end
         end
 
