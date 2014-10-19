@@ -3,6 +3,7 @@ require "yaml"
 require "rspec/rest/http/request"
 require "rspec/rest/http/response"
 require "rspec/rest/http/authentication"
+require "rspec/rest/http/server_config"
 
 module RSpec
   module Rest
@@ -59,14 +60,10 @@ module RSpec
           @__request__ = RSpec::Rest::Http::Request.new(@__default_request__)
           yield @__request__ if block_given?
 
-          config = __server_config__(options[:server] || @__request__.server)
-          uri_string = %Q(#{config["scheme"] || "http"}://#{config["address"]}:#{config["port"] || 80}/#{config["base_path"]}#{path})
-          begin
-            uri = URI.parse(uri_string)
-          rescue
-            raise RSpec::Rest::ConfigurationError.new("#{uri_string} is invalid")
-          end
-          http_request = Net::HTTP.const_get(method.to_s.capitalize).new(uri.path, __build_http_headers__(@__request__))
+          server = ServerConfig.build(@__request__.server)
+
+          request_path = server.build_request_path(path)
+          http_request = Net::HTTP.const_get(method.to_s.capitalize).new(request_path, __build_http_headers__(@__request__))
 
           if @__request__.auth
             @__request__.auth.inject_auth(http_request)
@@ -76,47 +73,9 @@ module RSpec
             http_request.body = @__request__.body
           end
 
-          log = "==============Request==================\n"
-          log << "Header:\n"
-          http_request.each_key do |key|
-            log << %Q(  #{key}: #{http_request[key]}\n)
-          end
-          log << "Body: #{http_request.body}\n"
-          log << "======================================="
-          logger.info(log)
+          http_response = server.send_request(http_request)
 
-          # TODO: https particular case
-          response = Net::HTTP.start(uri.host, uri.port) do |http|
-            http.request(http_request)
-          end
-
-          log = "==============Response==================\n"
-          log << "Header:\n"
-          response.each_key do |key|
-            log << %Q(  #{key}: #{response[key]}\n)
-          end
-          log << "Body: #{response.body}\n"
-          log << "======================================="
-          logger.info(log)
-
-          @__response__ = RSpec::Rest::Http::Response.new(response)
-        end
-
-        def __server_config__(server_name)
-          configs = __load_server_configuraitons__
-          if server_name
-            config = configs[server_name]
-            unless config
-              raise RSpec::Rest::ConfigurationError.new("#{server_name} not found in configuration")
-            end
-          else
-            servers = configs.values
-            config = (servers.size == 1 && servers.first) || servers.find{|server| server["default"]}
-            unless config
-              raise RSpec::Rest::ConfigurationError.new("server not specified and default server not found")
-            end
-          end
-          return config
+          @__response__ = RSpec::Rest::Http::Response.new(http_response)
         end
 
         def __build_http_headers__(rest_request)
@@ -129,27 +88,6 @@ module RSpec
             headers["Accept"] = rest_request.accept
           end
           headers.merge(rest_request.headers)
-        end
-
-        def __load_server_configuraitons__
-          return $__server_configurations__ if $__server_configurations__
-          file_path = RSpec.configuration.config_path + "/servers.yml"
-          $__server_configurations__  = RSpec::Rest::Util.load_yaml(file_path)
-          unless $__server_configurations__.is_a?(Hash)
-            raise RSpec::Rest::ConfigurationError.new("#{file_path} invalid format")
-          end
-
-          $__server_configurations__.each do |server_name, config|
-            if !config.is_a?(Hash)
-              raise RSpec::Rest::ConfigurationError.new("server configuration (#{server_name} in #{file_path}) is not a Hash")
-            end
-            ["address"].each do |key|
-              unless config.key?(key)
-                raise RSpec::Rest::ConfigurationError.new("#{key} not found in server configuration (#{server_name} in #{file_path}) ")
-              end
-            end
-          end
-          return $__server_configurations__
         end
       end
     end

@@ -33,7 +33,7 @@ Each server configuration has following items:
 - scheme: "http" or "https"
   - required: no
   - default: "http"
-- address: server address (IP address or FQDN)
+- host: server address (IP address or FQDN)
   - required: yes
 - port: tcp port
   - required: no
@@ -52,7 +52,7 @@ Example
 ~~~
 server1:
   :scheme : http
-  :address : localhost
+  :host : localhost
   :port : 80
 ~~~
 
@@ -132,7 +132,7 @@ File path : `RSpec.configuration.config_path`/keystones.yml
   - required: no
   - type: String
   - default: "http"
-- address: server address (IP address or FQDN)
+- host: server address (IP address or FQDN)
   - required: yes
   - type: Integer or String
 - port: tcp port

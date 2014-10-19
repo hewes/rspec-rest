@@ -40,6 +40,7 @@ module RSpec
             $__keystones__ ||= RSpec::Rest::Util.load_yaml(RSpec.configuration.config_path + "/keystones.yml")
             @auth_info = auth_info
             @auth_name = auth_name
+            @server_config = RSpec::Rest::Http::ServerConfig.new($__keystones__[@auth_info["server"]])
             @expire_time = nil
             @tenant_id = nil
           end
@@ -60,22 +61,12 @@ module RSpec
             end
             @token
           end
-
-          def base_uri
-            target = $__keystones__[@auth_info["server"]]
-            unless target
-              raise RSpec::Rest::KeystoneDefinitionNotFound.new(@auth_info["server"])
-            end
-            %Q(#{target["scheme"] || "http"}://#{target["address"]}:#{target["port"] || 5000}#{target["base_path"] || nil})
-          end
         end
 
         class Keystone_v2 < Keystone
           def authenticate
-            uri_string = base_uri + "/v2.0/tokens"
-            uri = URI.parse(uri_string)
-
-            http_request = Net::HTTP::Post.new(uri.path, "Content-Type" => "application/json")
+            request_path = @server_config.build_request_path("/v2.0/tokens")
+            http_request = Net::HTTP::Post.new(request_path, "Content-Type" => "application/json")
             http_request.body = {
               :auth  =>  {
                 :tenantName => @auth_info["tenant"],
@@ -86,10 +77,7 @@ module RSpec
               }
             }.to_json
 
-            # TODO: https particular case
-            response = Net::HTTP.start(uri.host, uri.port) do |http|
-              http.request(http_request)
-            end
+            response = @server_config.send_request(http_request)
 
             if [200, 201].include?(response.code.to_i)
               token_info = JSON.parse(response.body)["access"]["token"]
@@ -104,10 +92,8 @@ module RSpec
 
         class Keystone_v3 < Keystone
           def authenticate
-            uri_string = base_uri + "/v3/tokens"
-            uri = URI.parse(uri_string)
-
-            http_request = Net::HTTP::Post.new(uri.path, "Content-Type" => "application/json")
+            request_path = @server_config.build_request_path("/v3/tokens")
+            http_request = Net::HTTP::Post.new(request_path, "Content-Type" => "application/json")
             auth = {
               :auth  =>  {
                 :identity => {
@@ -131,13 +117,9 @@ module RSpec
                 }
               }
             end
-
             http_request.body = auth.to_json
 
-            # TODO: https particular case
-            response = Net::HTTP.start(uri.host, uri.port) do |http|
-              http.request(http_request)
-            end
+            response = @server_config.send_request(http_request)
 
             if [200, 201].include?(response.code.to_i)
               token_info = JSON.parse(response.body)["token"]
@@ -155,7 +137,6 @@ module RSpec
           "keystone_v2" => Keystone_v2,
           "keystone_v3" => Keystone_v3,
         }
-
       end
     end
   end
