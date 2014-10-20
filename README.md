@@ -5,7 +5,7 @@
 *Feature*:
 
 - define `rspec` matchers
-  - `have_http_status` (like rails)
+  - `have_http_status` (like `rspec-rails`)
   - `have_http_header`
   - `include_json`
   - `have_uuid_format`
@@ -36,8 +36,12 @@ it "responds 200 if authenticated as admin" do
     req.auth :admin
   end
   expect(response).to have_http_status(:ok)
+  expect(response.body).to have_guid_format.in_json_path("root/resources/resource")
+  expect(response.body).to include_json({resource: => {name: "name"}}.to_json).in_json_path("root/resources")
 end
 ```
+
+`response` returns instance of the last response (`Rspec::Rest::Http::Response`).
 
 ## Installation
 

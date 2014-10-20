@@ -70,7 +70,7 @@ describe RSpec::Rest::Matchers::IncludeJson do
   end
 
   it "matches nested partial hash" do
-    expect({"element1" => {"sub1" => "val1", "sub2" => {"sub3" => "val2"}}}.to_json).to include_json({"element1" => {"sub2" => {"sub3" => "val2"}}}.to_json)
+    expect({"element1" => {"sub1" => "val1", "sub2" => {"sub3" => "val2", "sub4" => "val3"}}}.to_json).to include_json({"element1" => {"sub2" => {"sub3" => "val2"}}}.to_json)
   end
 
   it "matches array" do
@@ -132,6 +132,30 @@ describe RSpec::Rest::Matchers::HaveGuidFormat do
     expect{
       expect(target[0...(-2)]).to have_guid_format
     }.to raise_error(RSpec::Expectations::ExpectationNotMetError, "#{target[0...(-2)]} is not GUID format")
+  end
+end
+
+describe RSpec::Rest::Matchers::HaveJsonPath do
+  it "matches json path" do
+    expect({:test => :value}.to_json).to have_json_path("test")
+    expect({:test => {:foo => :bar}}.to_json).to have_json_path("test/foo")
+  end
+
+  it "raises if not have json path" do
+    expect{
+      expect({:test => {:foo => :bar}} .to_json).to have_json_path("foo").and_item_size_is(2)
+    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, %Q({"test":{"foo":"bar"}} does not have json path "foo"))
+  end
+
+  it "matches json path and size" do
+    expect({:test => {:foo => :bar}}.to_json).to have_json_path("test").and_item_size_is(1)
+    expect({:test => {:foo => [1,2,3]}}.to_json).to have_json_path("test/foo").and_size(3)
+  end
+
+  it "raises if size not match" do
+    expect{
+      expect({:test => {:foo => :bar}} .to_json).to have_json_path("test").and_item_size_is(2)
+    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, %Q(expect 1 (size of {"foo"=>"bar"}) to equal 2 (test in {"test":{"foo":"bar"}})))
   end
 end
 

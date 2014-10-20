@@ -5,13 +5,13 @@ module RSpec
     module Matchers
       module JsonPath
         def in(json_path)
-          InJsonPathMatcher.new(self, json_path)
+          InJsonPathMatcher.new(json_path, self)
         end
 
         class InJsonPathMatcher
           include RSpec::Rest::Matchers::JsonParser
 
-          def initialize(parent_matcher, json_path)
+          def initialize(json_path, parent_matcher = nil)
             @parent_matcher = parent_matcher
             @json_path = json_path
             @validated_json_path = []
@@ -27,7 +27,12 @@ module RSpec
               end
               result[key]
             end
-            @parent_matcher.matches?(target)
+
+            if @parent_matcher
+              @parent_matcher.matches?(target)
+            else
+              return true
+            end
           end
 
           def failure_message

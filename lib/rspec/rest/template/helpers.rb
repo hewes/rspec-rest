@@ -1,3 +1,4 @@
+require "ostruct"
 
 module RSpec
   module Rest

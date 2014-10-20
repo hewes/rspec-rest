@@ -12,6 +12,9 @@ module RSpec
           else raise ArgumentError.new("can not parse specified value")
           end
         end
+
+        def track_json_path(param, json_path)
+        end
       end
     end
   end
