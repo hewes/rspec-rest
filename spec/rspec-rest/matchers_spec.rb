@@ -135,7 +135,14 @@ describe RSpec::Rest::Matchers::HaveGuidFormat do
   end
 end
 
-describe RSpec::Rest::Matchers::HaveJsonPath do
+describe RSpec::Rest::Matchers::EqualJsonValue do
+  it "matches json value" do
+    expect({:test => :value}.to_json).to eql_json_value("value").in("test")
+    expect({:test => {:foo => :bar}}.to_json).to eql_json_value("bar").in("test/foo")
+  end
+end
+
+describe RSpec::Rest::Matchers::JsonPath::InJsonPathMatcher do
   it "matches json path" do
     expect({:test => :value}.to_json).to have_json_path("test")
     expect({:test => {:foo => :bar}}.to_json).to have_json_path("test/foo")
@@ -143,19 +150,19 @@ describe RSpec::Rest::Matchers::HaveJsonPath do
 
   it "raises if not have json path" do
     expect{
-      expect({:test => {:foo => :bar}} .to_json).to have_json_path("foo").and_item_size_is(2)
+      expect({:test => {:foo => :bar}} .to_json).to contain(2).items.in("foo")
     }.to raise_error(RSpec::Expectations::ExpectationNotMetError, %Q({"test":{"foo":"bar"}} does not have json path "foo"))
   end
 
   it "matches json path and size" do
-    expect({:test => {:foo => :bar}}.to_json).to have_json_path("test").and_item_size_is(1)
-    expect({:test => {:foo => [1,2,3]}}.to_json).to have_json_path("test/foo").and_size(3)
+    expect({:test => {:foo => :bar}}.to_json).to contain(1).items.in("test")
+    expect({:test => {:foo => [1,2,3]}}.to_json).to contain(3).items.in("test/foo")
   end
 
   it "raises if size not match" do
     expect{
-      expect({:test => {:foo => :bar}} .to_json).to have_json_path("test").and_item_size_is(2)
-    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, %Q(expect 1 (size of {"foo"=>"bar"}) to equal 2 (test in {"test":{"foo":"bar"}})))
+      expect({:test => {:foo => :bar}} .to_json).to contain(2).items.in("test")
+    }.to raise_error(RSpec::Expectations::ExpectationNotMetError, %Q(expect {"foo"=>"bar"} to contain 2 items. but actual is 1 (test in {"test":{"foo":"bar"}})))
   end
 end
 

@@ -37,7 +37,7 @@ module RSpec
       end
     end
 
-    class TemplateMisssing < Exception
+    class TemplateMissing < Exception
       def initialize(template_path)
         super("#{template_path} not found")
       end

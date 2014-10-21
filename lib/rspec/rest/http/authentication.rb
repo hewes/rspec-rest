@@ -9,19 +9,20 @@ module RSpec
 
         def self.build(auth_name)
           @__authentications__ = {}
-          return @__authentications__[auth_name] if @__authentications__[auth_name]
+          auth = auth_name.to_s
+          return @__authentications__[auth] if @__authentications__[auth]
           @__file_cache__ ||= RSpec::Rest::Util.load_yaml(RSpec.configuration.config_path + "/authentications.yml")
 
-          auth_info = @__file_cache__[auth_name]
+          auth_info = @__file_cache__[auth]
           unless auth_info
-            raise RSpec::Rest::AuthenticationInformatoinNotFound.new(auth_name)
+            raise RSpec::Rest::AuthenticationInformatoinNotFound.new(auth)
           end
 
           driver = DriverMap[auth_info["mechanism"]]
           unless driver
-            raise RSpec::Rest::AuthenticationMechanismInvalid.new(auth_name, auth_info["mechanism"])
+            raise RSpec::Rest::AuthenticationMechanismInvalid.new(auth, auth_info["mechanism"])
           end
-          @__authentications__[auth_name] = driver.new(auth_name, auth_info)
+          @__authentications__[auth] = driver.new(auth, auth_info)
         end
 
         class Basic

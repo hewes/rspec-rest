@@ -5,7 +5,7 @@ module RSpec
         TypeMap = {
           :text       => "text/plain",
           :html       => "text/html",
-          :json       => "application/plain",
+          :json       => "application/json",
           :xml        => "application/xml",
           :binary     => "application/octet-stream",
           :pdf        => "application/pdf",
