@@ -8,7 +8,7 @@ module RSpec
       class Authentication
 
         def self.build(auth_name)
-          @__authentications__ = {}
+          @__authentications__ ||= {}
           auth = auth_name.to_s
           return @__authentications__[auth] if @__authentications__[auth]
           @__file_cache__ ||= RSpec::Rest::Util.load_yaml(RSpec.configuration.config_path + "/authentications.yml")
