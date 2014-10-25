@@ -43,6 +43,18 @@ module RSpec
       end
     end
 
+    class TemplateNotReadable < Exception
+      def initialize(template_path)
+        super("#{template_path} is not readable")
+      end
+    end
+
+    class AmbiguousTemplatePath < Exception
+      def initialize(template_path, candidates)
+        super("#{template_path} is ambiguous. #{candidates.inspect} are found")
+      end
+    end
+
     class TemplateRenderError < Exception
       def initialize(template, reason)
         super("Failed to render #{template}. reason: #{reason}")
