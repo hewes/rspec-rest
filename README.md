@@ -10,6 +10,8 @@
   - `include_json`
   - `have_uuid_format`
   - `have_guid_format`
+  - `eql_json_value`
+  - `contain`
 
 - define helper methods for send http request to WEB server
   - send/receive http request/response
