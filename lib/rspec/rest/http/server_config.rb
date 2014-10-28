@@ -100,6 +100,7 @@ module RSpec
           end
 
           log = "==============Response==================\n"
+          log << "Status: #{res.code} #{res.message}\n"
           log << "Header:\n"
           res.each_key do |key|
             log << %Q(  #{key}: #{res[key]}\n)
