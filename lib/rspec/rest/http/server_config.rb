@@ -75,14 +75,15 @@ module RSpec
         end
 
         def send_request(req)
-          logger.info(self.to_s)
 
           log = "==============Request==================\n"
+          log << "#{req.method} #{@scheme}://#{@host}:#{@port}#{req.path}\n"
           log << "Header:\n"
           req.each_key do |key|
             log << %Q(  #{key}: #{req[key]}\n)
           end
-          log << "Body: #{req.body}\n"
+          log << "Body:\n"
+          log << "#{req.body}\n"
           log << "======================================="
           logger.info(log)
 
@@ -111,12 +112,12 @@ module RSpec
         end
 
         def to_s
-          %Q(ServerConfig #{@scheme}://#{@host}:#{@port}/#{@base_path})
+          %Q(ServerConfig #{@scheme}://#{@host}:#{@port}#{@base_path})
         end
 
         private
         def validate_path(path = nil)
-          uri_string = %Q(#{@scheme}://#{@host}:#{@port}/#{@base_path}#{path})
+          uri_string = %Q(#{@scheme}://#{@host}:#{@port}#{@base_path}#{path})
           begin
             URI.parse(uri_string)
           rescue

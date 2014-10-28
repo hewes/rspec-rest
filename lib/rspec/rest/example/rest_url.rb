@@ -4,15 +4,15 @@ module RSpec
   module Rest
     module RestURLExampleGroup
       def http_method
-        meth = top_level_group[:description_args].first.split("\s")[0].downcase.to_sym
+        meth = rest_url_group[:description_args].first.split("\s")[0].downcase.to_sym
         case meth
         when :get,:post,:put,:delete,:head then meth
-        else raise "invalid describe format for rest_url (#{top_level_group[:description_args].first})"
+        else raise "invalid describe format for rest_url (#{rest_url_group[:description_args].first})"
         end
       end
 
       def request_path
-        uri = URI.parse(top_level_group[:description_args].first.split(/\s+/)[1])
+        uri = URI.parse(rest_url_group[:description_args].first.split(/\s+/)[1])
         path = uri.path
         path.scan(/:[^\/]+/).uniq.each do |pattern|
           var = :"@#{pattern.sub(/^:/, "")}"
@@ -24,12 +24,19 @@ module RSpec
         return path
       end
 
-      def top_level_group
-        metadata = example.metadata
-        while metadata.key?(:example_group)
-          metadata = metadata[:example_group]
+      def rest_url_group
+        if RSpec.respond_to?(:current_example)
+          example_group = RSpec.current_example.metadata[:example_group]
+          while example_group.key?(:parent_example_group)
+            example_group = example_group[:parent_example_group]
+          end
+        else
+          example_group = example.metadata
+          while example_group.key?(:example_group)
+            example_group = example_group[:example_group]
+          end
         end
-        return metadata
+        return example_group
       end
     end
   end

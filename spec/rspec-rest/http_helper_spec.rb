@@ -28,7 +28,7 @@ describe RSpec::Rest::Http::Helpers do
     with_authentication "user1"
 
     it "inejects token to request header" do
-      get "dummy"
+      get "/dummy"
     end
   end
 end
