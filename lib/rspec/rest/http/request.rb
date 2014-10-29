@@ -6,8 +6,7 @@ module RSpec
       class Request
 
         def initialize(default_request = nil)
-          @content_mime_type = default_request.content_mime_type rescue :text
-          @accept = default_request.accept rescue :text
+          @content_mime_type = default_request.content_mime_type rescue nil
           @content_charset = default_request.content_charset rescue nil
           @content_type = default_request.content_type rescue nil
           @body = default_request.body rescue nil
@@ -17,8 +16,8 @@ module RSpec
           @server = default_request.server rescue nil
         end
 
-        attr_writer :content_mime_type, :content_type
-        attr_accessor :content_charset, :body, :server, :auth
+        attr_writer :content_type
+        attr_accessor :content_mime_type, :content_charset, :body, :server, :auth
         attr_reader :option_headers
 
         def content_type
