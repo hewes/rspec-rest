@@ -10,7 +10,7 @@ module RSpec
           @content_charset = default_request.content_charset rescue nil
           @content_type = default_request.content_type rescue nil
           @body = default_request.body rescue nil
-          @accept = default_request.accept rescue nil
+          @accept = default_request.instance_variable_get(:@accept) rescue nil
           @option_headers = default_request.headers rescue {}
           @auth = default_request.auth rescue nil
           @server = default_request.server rescue nil
