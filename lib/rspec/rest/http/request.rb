@@ -8,7 +8,7 @@ module RSpec
         def initialize(default_request = nil)
           @content_mime_type = default_request.content_mime_type rescue nil
           @content_charset = default_request.content_charset rescue nil
-          @content_type = default_request.content_type rescue nil
+          @content_type = default_request.instance_variable_get(:@content_type) rescue nil
           @body = default_request.body rescue nil
           @accept = default_request.instance_variable_get(:@accept) rescue nil
           @option_headers = default_request.headers rescue {}
