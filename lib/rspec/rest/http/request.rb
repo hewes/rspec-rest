@@ -16,7 +16,7 @@ module RSpec
           @server = default_request.server rescue nil
         end
 
-        attr_writer :content_type
+        attr_writer :content_type, :accept
         attr_accessor :content_mime_type, :content_charset, :body, :server, :auth
         attr_reader :option_headers
 
